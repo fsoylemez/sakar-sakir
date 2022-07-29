@@ -11,5 +11,7 @@ public class ExecutionResponse implements Serializable {
 
     private String ticker;
 
+    private String winnerStrategy;
+
     private List<StrategyExecutionResponse> strategyExecutionResponses;
 }

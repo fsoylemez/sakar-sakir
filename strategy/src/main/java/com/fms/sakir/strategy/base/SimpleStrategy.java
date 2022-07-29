@@ -16,11 +16,17 @@ public abstract class SimpleStrategy {
     private static final Logger log = Logger.getLogger(SimpleStrategy.class);
 
     @Getter
-    public String strategyName;
+    public final String strategyName;
+
+    protected SimpleStrategy(String strategyName) {
+        this.strategyName = strategyName;
+    }
 
     public abstract Strategy buildStrategy(BarSeries series);
 
-    public abstract Trade.TradeType getTradeType();
+    public Trade.TradeType getTradeType() {
+        return Trade.TradeType.BUY;
+    }
 
     public StrategyExecutionResponse runStrategy(BarSeries series, Boolean showPositions) {
 
@@ -62,4 +68,6 @@ public abstract class SimpleStrategy {
 
         return summary;
     }
+
+
 }

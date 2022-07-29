@@ -14,11 +14,17 @@ public class ComboSolEthCci2Strategy extends SimpleStrategy {
 
     private final Integer cciBarCount;
 
-    public ComboSolEthCci2Strategy(String strategyName, Integer aroonBarCount, Integer stochBarCount, Integer cciBarCount) {
-        this.strategyName = strategyName;
+    private final Integer cciEntryThreshold;
+
+    private final Integer cciExitThreshold;
+
+    public ComboSolEthCci2Strategy(String strategyName, Integer aroonBarCount, Integer stochBarCount, Integer cciBarCount, Integer cciEntryThreshold, Integer cciExitThreshold) {
+        super(strategyName);
         this.aroonBarCount = aroonBarCount;
         this.stochBarCount = stochBarCount;
         this.cciBarCount = cciBarCount;
+        this.cciEntryThreshold = cciEntryThreshold;
+        this.cciExitThreshold = cciExitThreshold;
     }
 
     @Override
@@ -35,11 +41,11 @@ public class ComboSolEthCci2Strategy extends SimpleStrategy {
 
         Rule entryRule = new CrossedUpIndicatorRule(aroon.getAroonUpIndicator(), aroon.getAroonDownIndicator())
                 .or(new UnderIndicatorRule(stochK, 30).and(new CrossedUpIndicatorRule(stochK, stochD)).and(new IsRisingRule(fisher, 1)))
-                .or(new CrossedUpIndicatorRule(cci, -100));
+                .or(new CrossedUpIndicatorRule(cci, cciEntryThreshold));
 
         Rule exitRule = new CrossedDownIndicatorRule(aroon.getAroonUpIndicator(), aroon.getAroonDownIndicator())
                 .or(new OverIndicatorRule(stochK, 70).and(new CrossedDownIndicatorRule(stochK, stochD)).and(new IsFallingRule(fisher, 1)))
-                .or(new CrossedDownIndicatorRule(cci, 100));
+                .or(new CrossedDownIndicatorRule(cci, cciExitThreshold));
 
         return new BaseStrategy(entryRule, exitRule);
     }

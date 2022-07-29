@@ -19,7 +19,7 @@ public class ComboStrategy extends SimpleStrategy {
     private Integer stochBarCount;
 
     public ComboStrategy(String strategyName, Integer aroonBarCount, Integer cmfBarCount, Integer stochBarCount) {
-        this.strategyName = strategyName;
+        super(strategyName);
         this.aroonBarCount = aroonBarCount;
         this.cmfBarCount = cmfBarCount;
         this.stochBarCount = stochBarCount;

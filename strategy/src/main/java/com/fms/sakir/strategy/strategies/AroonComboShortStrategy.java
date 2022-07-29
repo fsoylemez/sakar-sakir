@@ -18,7 +18,7 @@ public class AroonComboShortStrategy extends SimpleStrategy {
     private Integer stochBarCount;
 
     public AroonComboShortStrategy(String strategyName, Integer aroonBarCount, Integer cmfBarCount, Integer stochBarCount) {
-        this.strategyName = strategyName;
+        super(strategyName);
         this.aroonBarCount = aroonBarCount;
         this.cmfBarCount = cmfBarCount;
         this.stochBarCount = stochBarCount;

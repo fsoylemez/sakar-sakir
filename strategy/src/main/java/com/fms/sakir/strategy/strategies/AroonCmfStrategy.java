@@ -14,7 +14,7 @@ public class AroonCmfStrategy extends SimpleStrategy {
     private Integer cmfBarCount;
 
     public AroonCmfStrategy(String strategyName, Integer aroonBarCount, Integer cmfBarCount) {
-        this.strategyName = strategyName;
+        super(strategyName);
         this.aroonBarCount = aroonBarCount;
         this.cmfBarCount = cmfBarCount;
     }

@@ -12,7 +12,7 @@ public class AroonStrategy extends SimpleStrategy {
     private Integer barCount;
 
     public AroonStrategy(String strategyName, Integer barCount) {
-        this.strategyName = strategyName;
+        super(strategyName);
         this.barCount = barCount;
     }
 

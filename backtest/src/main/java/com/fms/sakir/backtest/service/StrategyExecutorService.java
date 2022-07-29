@@ -3,9 +3,11 @@ package com.fms.sakir.backtest.service;
 import com.binance.api.client.domain.market.CandlestickInterval;
 import com.fms.sakir.backtest.model.ExecutionRequest;
 import com.fms.sakir.backtest.model.ExecutionResponse;
+import com.fms.sakir.backtest.model.ExecutionResult;
+import com.fms.sakir.backtest.model.StrategyPerformance;
+import com.fms.sakir.backtest.strategy.factory.StrategyFactoryV2;
 import com.fms.sakir.backtest.util.DateUtils;
 import com.fms.sakir.strategy.base.SimpleStrategy;
-import com.fms.sakir.strategy.factory.StrategyFactory;
 import com.fms.sakir.strategy.model.StrategyExecutionResponse;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
@@ -13,8 +15,7 @@ import org.ta4j.core.BaseBarSeries;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -29,7 +30,7 @@ public class StrategyExecutorService {
         List<Bar> bars = dataService.fetchData(ticker, interval, DateUtils.dateToMilli(startDate), DateUtils.dateToMilli(endDate));
         bars.forEach(series::addBar);
 
-        List<SimpleStrategy> strategies = StrategyFactory.getAllStrategies();
+        List<SimpleStrategy> strategies = StrategyFactoryV2.getAll();
         List<StrategyExecutionResponse> response = new ArrayList<>(strategies.size());
 
         if (!"all".equals(strategy)) {
@@ -41,9 +42,11 @@ public class StrategyExecutorService {
         return response;
     }
 
-    public List<ExecutionResponse> execute(ExecutionRequest request, Boolean showPositions) {
+    public ExecutionResult execute(ExecutionRequest request, Boolean showPositions) {
+        ExecutionResult result = new ExecutionResult();
+        List<ExecutionResponse> responses = new ArrayList<>(request.getTickers().size());
 
-        List<ExecutionResponse> response = new ArrayList<>(request.getTickers().size());
+        List<SimpleStrategy> strategies = StrategyFactoryV2.getAll(request.getStrategies());
 
         for (String ticker : request.getTickers()) {
             ExecutionResponse executionResponse = new ExecutionResponse();
@@ -53,15 +56,29 @@ public class StrategyExecutorService {
             List<Bar> bars = dataService.fetchData(ticker, CandlestickInterval.valueOf(request.getInterval()), DateUtils.dateToMilli(request.getStartDate()), DateUtils.dateToMilli(request.getEndDate()));
             bars.forEach(series::addBar);
 
-            List<SimpleStrategy> strategies = StrategyFactory.getStrategies(request.getStrategies());
             List<StrategyExecutionResponse> strategyResponses = new ArrayList<>(strategies.size());
 
             strategies.forEach(ss -> strategyResponses.add(ss.runStrategy(series, showPositions)));
 
             executionResponse.setStrategyExecutionResponses(strategyResponses);
-            response.add(executionResponse);
+            String winnerStrategy = strategyResponses.stream().max(Comparator.comparing(StrategyExecutionResponse::getGrossReturn)).map(StrategyExecutionResponse::getStrategyName).orElse("NaN");
+            executionResponse.setWinnerStrategy(winnerStrategy);
+            responses.add(executionResponse);
         }
 
-        return response;
+        result.setExecutionResponses(responses);
+
+        Map<String, List<StrategyExecutionResponse>> responsesByStrategy = responses
+                .stream()
+                .map(ExecutionResponse::getStrategyExecutionResponses)
+                .flatMap(Collection::stream)
+                .collect(Collectors.groupingBy(StrategyExecutionResponse::getStrategyName));
+
+        List<StrategyPerformance> performances = new ArrayList<>(strategies.size());
+        responsesByStrategy.forEach((k,v)-> performances.add(new StrategyPerformance(k, v.stream().mapToDouble(StrategyExecutionResponse::getGrossReturn).sum())));
+
+        result.setStrategyPerformances(performances.stream().sorted(Comparator.comparingDouble(StrategyPerformance::getTotalReturn).reversed()).collect(Collectors.toList()));
+
+        return result;
     }
 }

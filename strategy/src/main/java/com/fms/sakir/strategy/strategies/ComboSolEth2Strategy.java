@@ -16,7 +16,7 @@ public class ComboSolEth2Strategy extends SimpleStrategy {
     private final Integer stochBarCount;
 
     public ComboSolEth2Strategy(String strategyName, Integer aroonBarCount, Integer stochBarCount) {
-        this.strategyName = strategyName;
+        super(strategyName);
         this.aroonBarCount = aroonBarCount;
         this.stochBarCount = stochBarCount;
 

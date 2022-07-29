@@ -16,7 +16,7 @@ public class MyStrategy extends SimpleStrategy {
     private Double higherThreshold;
 
     public MyStrategy(String strategyName, Integer rsi, Double lowerThreshold, Double higherThreshold) {
-        this.strategyName = strategyName;
+        super(strategyName);
         this.rsi = rsi;
         this.lowerThreshold = lowerThreshold;
         this.higherThreshold = higherThreshold;

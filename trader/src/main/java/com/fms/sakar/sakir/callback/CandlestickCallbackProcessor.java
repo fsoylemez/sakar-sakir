@@ -72,7 +72,7 @@ public class CandlestickCallbackProcessor implements BinanceApiWebSocketCallback
             } else {
                 barSeries.addBar(newBar);
                 lastOpenTime = response.getOpenTime();
-                log.info("Added new bar, open time: {}", Instant.ofEpochMilli(lastOpenTime));
+                //log.info("Added new bar, open time: {}", Instant.ofEpochMilli(lastOpenTime).atZone(DateUtils.getZoneId()));
             }
 
             positionService.evaluateEntryOrExit(barSeries, symbol, strategyName);
@@ -90,9 +90,9 @@ public class CandlestickCallbackProcessor implements BinanceApiWebSocketCallback
     @Override
     public void onClosing(int code, String reason) {
         BinanceApiWebSocketCallback.super.onClosing(code, reason);
-        log.error("WEBSOCKET CLOSING.Code: {} Reason: {}", code, reason);
+        log.error("Websocket closing.Code: {} Reason: {}", code, reason);
         if (1001 == code) {
-            log.info("Socket closed.Reinstantiating runner.");
+            log.info("Websocket closed.Reinstantiating runner.");
             runnerService.reconnect(taskId);
         }
     }

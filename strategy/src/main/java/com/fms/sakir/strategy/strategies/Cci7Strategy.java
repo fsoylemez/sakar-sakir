@@ -12,7 +12,7 @@ public class Cci7Strategy extends SimpleStrategy {
     private final Integer cciBarCount;
 
     public Cci7Strategy(String strategyName, Integer cciBarCount) {
-        this.strategyName = strategyName;
+        super(strategyName);
         this.cciBarCount = cciBarCount;
     }
 

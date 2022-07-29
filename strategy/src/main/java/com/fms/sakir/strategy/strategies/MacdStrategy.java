@@ -18,7 +18,7 @@ public class MacdStrategy extends SimpleStrategy {
     private Integer emaSize;
 
     public MacdStrategy(String strategyName, Integer shortBarSize, Integer longBarSize, Integer emaSize) {
-        this.strategyName = strategyName;
+        super(strategyName);
         this.shortBarSize = shortBarSize;
         this.longBarSize = longBarSize;
         this.emaSize = emaSize;

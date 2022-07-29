@@ -16,7 +16,7 @@ public class CMFStrategy extends SimpleStrategy {
     private Double higherThreshold;
 
     public CMFStrategy(String strategyName, Integer barCount, Double lowerThreshold, Double higherThreshold) {
-        this.strategyName = strategyName;
+        super(strategyName);
         this.barCount = barCount;
         this.lowerThreshold = lowerThreshold;
         this.higherThreshold = higherThreshold;

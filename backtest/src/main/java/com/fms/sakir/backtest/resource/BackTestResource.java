@@ -2,7 +2,7 @@ package com.fms.sakir.backtest.resource;
 
 import com.binance.api.client.domain.market.CandlestickInterval;
 import com.fms.sakir.backtest.model.ExecutionRequest;
-import com.fms.sakir.backtest.model.ExecutionResponse;
+import com.fms.sakir.backtest.model.ExecutionResult;
 import com.fms.sakir.backtest.service.StrategyExecutorService;
 import com.fms.sakir.strategy.model.StrategyExecutionResponse;
 
@@ -23,7 +23,7 @@ public class BackTestResource {
     }
 
     @POST
-    public List<ExecutionResponse> execute(ExecutionRequest request, @QueryParam("showPositions") Boolean showPositions) {
+    public ExecutionResult execute(ExecutionRequest request, @QueryParam("showPositions") Boolean showPositions) {
         return strategyExecutorService.execute(request, showPositions);
     }
 

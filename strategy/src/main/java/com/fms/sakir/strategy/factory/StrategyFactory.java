@@ -55,9 +55,10 @@ public class StrategyFactory {
         strategies.add(new AroonCombo4FStrategy("AroonCombo4F",20, 14));
         strategies.add(new Combo2Strategy("Combo2",20, 18, 14));
         strategies.add(new ComboSolEthCciStrategy("ComboSolEthCci",20, 14, 25));
-        strategies.add(new ComboSolEthCci2Strategy("ComboSolEthCci2",20, 14, 25));
-        strategies.add(new ComboSolEthCci2Strategy("ComboSolEthCci3",20, 14, 20));
-        strategies.add(new CciStrategy("Cci",25));
+        strategies.add(new ComboSolEthCci2Strategy("ComboSolEthCci2",20, 14, 25, -100, 100));
+        strategies.add(new ComboSolEthCci2Strategy("ComboSolEthCci3",20, 14, 20, -100, 100));
+        strategies.add(new ComboSolEthCci2Strategy("ComboSolEthCci4",20, 14, 20, -100, -100));
+        strategies.add(new CciStrategy("Cci",25, -100, 100));
         strategies.add(new Cci7Strategy("Cci7",13));
         strategies.add(new Cci7Strategy("Cci20",20));
 

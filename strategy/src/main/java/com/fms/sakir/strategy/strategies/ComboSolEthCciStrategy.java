@@ -15,7 +15,7 @@ public class ComboSolEthCciStrategy extends SimpleStrategy {
     private final Integer cciBarCount;
 
     public ComboSolEthCciStrategy(String strategyName, Integer aroonBarCount, Integer stochBarCount, Integer cciBarCount) {
-        this.strategyName = strategyName;
+        super(strategyName);
         this.aroonBarCount = aroonBarCount;
         this.stochBarCount = stochBarCount;
         this.cciBarCount = cciBarCount;
