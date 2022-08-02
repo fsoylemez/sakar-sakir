@@ -6,6 +6,7 @@ import com.fms.sakir.strategy.strategies.AroonStrategy;
 import com.fms.sakir.strategy.strategies.CciStrategy;
 import com.fms.sakir.strategy.strategies.ComboSolEthCci2Strategy;
 import com.fms.sakir.strategy.strategies.StochConjuctionStrategy;
+import com.fms.sakir.strategy.strategies.v2.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,10 +16,24 @@ public class StrategyFactoryV2 {
 
     public static List<SimpleStrategy> getAll() {
         List<SimpleStrategy> strategies = new ArrayList<>();
+        strategies.add(new StochCciStrategy("StochCci", 14,25, 30, 70));
         strategies.add(new StochConjuctionStrategy("StochConj14", 14,30, 70));
         strategies.add(new CciStrategy("Cci25",25, -100, 100));
+        strategies.add(new CciMAStrategy("CciMA",25));
+        strategies.add(new CciEMAStrategy("CciEMA",25));
+        strategies.add(new CciFisherStrategy("CciFisher",25, -100, 100));
+        strategies.add(new AroonCciStrategy("AroonCci",25, 20, -100));
+        strategies.add(new AroonCciStrategy("AroonCci0",25, 20, 0));
         strategies.add(new AroonStrategy("Aroon20",20));
+        strategies.add(new AroonSarStrategy("AroonSar",20));
+        strategies.add(new StochSarStrategy("StochSar",14, 30, 70));
+        strategies.add(new AroonStochV2Strategy("AroonStochV2",20, 14));
+        strategies.add(new AroonStochV3Strategy("AroonStochV3",20, 14));
+        strategies.add(new AroonStochV4Strategy("AroonStochV4",20, 14));
+        strategies.add(new StochFisherStrategy("StochFisher",20, 30, 70));
+        strategies.add(new StochFisherV2Strategy("StochFisher2",20, 30, 70));
         strategies.add(new ComboSolEthCci2Strategy("Combo1",20, 14, 20, -100, 100));
+        strategies.add(new ComboSolEthCci2Strategy("Combo1Cci25",20, 14, 25, -100, 100));
         strategies.add(new ComboSolEthCci2Strategy("Combo2",20, 14, 20, -100, -100));
 
 
