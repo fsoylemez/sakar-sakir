@@ -41,8 +41,8 @@ public class StochCciStrategy extends SimpleStrategy {
         Rule entryRule = new UnderIndicatorRule(stochK, entryPointThreshold).and(new CrossedUpIndicatorRule(stochK, stochD))
                 .and(new IsRisingRule(cci, 1));
 
-        Rule exitRule = new OverIndicatorRule(stochK, exitPointThreshold).and(new CrossedDownIndicatorRule(stochK, stochD))
-                .and(new IsFallingRule(cci, 1));
+        Rule exitRule = new CrossedDownIndicatorRule(cci, -100).or(new OverIndicatorRule(stochK, exitPointThreshold).and(new CrossedDownIndicatorRule(stochK, stochD))
+                .and(new IsFallingRule(cci, 1)));
 
         return new BaseStrategy(entryRule, exitRule);
     }
