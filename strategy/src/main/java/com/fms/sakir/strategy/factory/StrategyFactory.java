@@ -3,6 +3,7 @@ package com.fms.sakir.strategy.factory;
 import com.fms.sakir.strategy.base.SimpleStrategy;
 import com.fms.sakir.strategy.exception.SakirException;
 import com.fms.sakir.strategy.strategies.*;
+import com.fms.sakir.strategy.strategies.v2.AroonSarStrategy;
 import com.fms.sakir.strategy.strategies.v2.StochCciStrategy;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Strategy;
@@ -64,6 +65,7 @@ public class StrategyFactory {
         strategies.add(new Cci7Strategy("Cci20",20));
         /*************new strategies*****************/
         strategies.add(new StochCciStrategy("StochCci", 14,25, 30, 70));
+        strategies.add(new AroonSarStrategy("AroonSar",20));
     }
 
     public static Strategy getStrategyByName(String name, BarSeries series) throws SakirException {
