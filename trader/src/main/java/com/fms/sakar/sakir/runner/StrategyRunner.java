@@ -9,6 +9,7 @@ import com.fms.sakar.sakir.service.PositionService;
 import com.fms.sakar.sakir.service.RunnerService;
 import com.fms.sakar.sakir.service.binance.BinanceMarketService;
 import com.fms.sakar.sakir.util.DateUtils;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBarSeries;
@@ -28,6 +29,7 @@ import static com.fms.sakar.sakir.execution.ExecutionConstants.*;
 @Slf4j
 public class StrategyRunner implements Runnable {
 
+    @Getter
     private final RunnerRequest runnerRequest;
 
     private final BinanceApiWebSocketClient webSocketClient;

@@ -21,7 +21,7 @@ public class RunnerResource {
     RunnerService runnerService;
 
     @POST
-    public Response newRunner(@Valid RunnerRequest runnerRequest) throws SakirException {
+    public Response newRunner(@Valid RunnerRequest runnerRequest) {
         UUID taskId = runnerService.newRunner(runnerRequest);
 
         return Response.ok(taskId).build();
@@ -33,5 +33,11 @@ public class RunnerResource {
         runnerService.stopTask(taskId);
 
         return Response.ok().build();
+    }
+
+    @GET
+    @Path("/running")
+    public Response getRunning() {
+        return Response.ok(runnerService.getRunning()).build();
     }
 }

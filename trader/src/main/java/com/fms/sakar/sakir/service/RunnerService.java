@@ -2,6 +2,7 @@ package com.fms.sakar.sakir.service;
 
 import com.binance.api.client.BinanceApiWebSocketClient;
 import com.fms.sakar.sakir.model.runner.RunnerRequest;
+import com.fms.sakar.sakir.model.runner.RunnerResponse;
 import com.fms.sakar.sakir.runner.StrategyRunner;
 import com.fms.sakar.sakir.service.binance.BinanceMarketService;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +12,10 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @ApplicationScoped
@@ -33,7 +36,7 @@ public class RunnerService {
     BinanceApiWebSocketClient webSocketClient;
 
     public UUID newRunner(RunnerRequest runnerRequest) {
-        log.info("Starting new runner with symbol {} chart {}", runnerRequest.getSymbol(), runnerRequest.getInterval().getIntervalId());
+        log.info("Starting new runner with symbol {} chart {} and strategy {}", runnerRequest.getSymbol(), runnerRequest.getInterval().getIntervalId(), runnerRequest.getStrategyName());
 
         UUID taskId = UUID.randomUUID();
 
@@ -60,5 +63,9 @@ public class RunnerService {
     public void reconnect(UUID taskId) {
         StrategyRunner runner = runningTasks.get(taskId);
         executor.runAsync(runner);
+    }
+
+    public List<RunnerResponse> getRunning() {
+        return runningTasks.entrySet().stream().map(e-> new RunnerResponse(e.getKey(), e.getValue().getRunnerRequest())).collect(Collectors.toList());
     }
 }
