@@ -16,10 +16,12 @@ public class StrategyFactoryV2 {
 
     public static List<SimpleStrategy> getAll() {
         List<SimpleStrategy> strategies = new ArrayList<>();
+        strategies.add(new StochCciSar2Strategy("StochCciSar2",14,25, 30));
         strategies.add(new StochCciSarStrategy("StochCciSar",14,25, 30, 70));
         strategies.add(new AroonSar3Strategy("AroonSar3",20));
         strategies.add(new AroonSar2Strategy("AroonSar2",20));
         strategies.add(new SarStrategy("Sar"));
+        strategies.add(new SarExStrategy("SarEx"));
         strategies.add(new StochCciStrategy("StochCci", 14,25, 30, 70));
         strategies.add(new StochConjuctionStrategy("StochConj14", 14,30, 70));
         strategies.add(new CciStrategy("Cci25",25, -100, 100));
