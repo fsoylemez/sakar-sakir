@@ -7,19 +7,13 @@ import org.ta4j.core.rules.CrossedDownIndicatorRule;
 import org.ta4j.core.rules.CrossedUpIndicatorRule;
 
 
-public class MyStrategy extends SimpleStrategy {
+public class AroonExitStrategy extends SimpleStrategy {
 
-    private Integer rsi;
+    private final Integer aroonBarCount;
 
-    private Double lowerThreshold;
-
-    private Double higherThreshold;
-
-    public MyStrategy(String strategyName, Integer rsi, Double lowerThreshold, Double higherThreshold) {
+    public AroonExitStrategy(String strategyName, Integer aroonBarCount) {
         super(strategyName);
-        this.rsi = rsi;
-        this.lowerThreshold = lowerThreshold;
-        this.higherThreshold = higherThreshold;
+        this.aroonBarCount = aroonBarCount;
     }
 
     @Override
@@ -29,7 +23,7 @@ public class MyStrategy extends SimpleStrategy {
         }
 
 
-        AroonOscillatorIndicator aroon = new AroonOscillatorIndicator(series, 7);
+        AroonOscillatorIndicator aroon = new AroonOscillatorIndicator(series, aroonBarCount);
 
         Rule entryRule = new CrossedUpIndicatorRule(aroon.getAroonUpIndicator(), aroon.getAroonDownIndicator());
 

@@ -36,9 +36,6 @@ public abstract class SimpleStrategy {
         Num returnRatio = new GrossReturnCriterion().calculate(series, tradingRecord);
 
         log.info(strategyName + " , " + tradingRecord.getPositionCount() + " positions " + returnRatio + " return");
-        if (tradingRecord.getCurrentPosition().getEntry() != null) {
-            log.info("Open Position: " + tradingRecord.getCurrentPosition().toString() + " Entry Time:" + series.getBar(tradingRecord.getCurrentPosition().getEntry().getIndex()).getEndTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        }
 
         StrategyExecutionResponse strategyExecutionResponse = StrategyExecutionResponse.builder().strategyName(strategyName)
                 .grossReturn(returnRatio.doubleValue())

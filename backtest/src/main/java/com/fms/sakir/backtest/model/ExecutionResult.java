@@ -7,7 +7,7 @@ import java.util.List;
 @Data
 public class ExecutionResult {
 
-    private List<StrategyPerformance> strategyPerformances;
+    private List<StrategyPerformanceSummary> strategyPerformances;
 
     private List<ExecutionResponse> executionResponses;
 }

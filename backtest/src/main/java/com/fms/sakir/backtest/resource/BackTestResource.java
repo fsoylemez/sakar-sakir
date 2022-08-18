@@ -18,13 +18,25 @@ public class BackTestResource {
 
     @GET
     @Path("/{strategy}/{ticker}/{startDate}/{endDate}/{interval}")
-    public List<StrategyExecutionResponse> execute(@PathParam("strategy") String strategy, @PathParam("ticker") String ticker, @PathParam("startDate") String startDate, @PathParam("endDate") String endDate, @PathParam("interval") String interval) {
-        return strategyExecutorService.execute(strategy, CandlestickInterval.valueOf(interval), ticker, startDate, endDate);
+        public List<StrategyExecutionResponse> executeLive(@PathParam("strategy") String strategy, @PathParam("ticker") String ticker, @PathParam("startDate") String startDate, @PathParam("endDate") String endDate, @PathParam("interval") String interval) {
+        return strategyExecutorService.executeLive(strategy, CandlestickInterval.valueOf(interval), ticker, startDate, endDate);
     }
 
     @POST
-    public ExecutionResult execute(ExecutionRequest request, @QueryParam("showPositions") Boolean showPositions) {
-        return strategyExecutorService.execute(request, showPositions);
+    public ExecutionResult executeLive(ExecutionRequest request, @QueryParam("showPositions") Boolean showPositions) {
+        return strategyExecutorService.executeLive(request, showPositions);
+    }
+
+    @GET
+    @Path("/db/{strategy}/{ticker}/{startDate}/{endDate}/{interval}")
+    public List<StrategyExecutionResponse> executeDb(@PathParam("strategy") String strategy, @PathParam("ticker") String ticker, @PathParam("startDate") String startDate, @PathParam("endDate") String endDate, @PathParam("interval") String interval) {
+        return strategyExecutorService.executeDb(strategy, CandlestickInterval.valueOf(interval), ticker, startDate, endDate);
+    }
+
+    @POST
+    @Path("/db")
+    public ExecutionResult executeDb(ExecutionRequest request, @QueryParam("showPositions") Boolean showPositions) {
+        return strategyExecutorService.executeDb(request, showPositions);
     }
 
 }
