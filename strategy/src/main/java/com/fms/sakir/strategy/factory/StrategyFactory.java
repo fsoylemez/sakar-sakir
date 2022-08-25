@@ -114,6 +114,21 @@ public class StrategyFactory {
         strategies.add(new AroonComboStrategy("AroonCombo7Stoch",7,  7));
         strategies.add(new AroonFisherStrategy("AroonFisher",7,  14));
         strategies.add(new AroonFisher2Strategy("AroonFisher2",7,  14));
+        strategies.add(new AroonComboCciStrategy("AroonComboCci",7,  14, 20));
+        strategies.add(new StochSar2Strategy("StochSar2",14, 30, 70, 0d));
+        strategies.add(new StochSar2Strategy("StochSar3",14, 30, 70, 1d));
+        strategies.add(new SarCciStrategy("SarCci", 7, 100, -100));
+        strategies.add(new SarCci2Strategy("SarCci2", 7, -100, 1d));
+        strategies.add(new SarCci2Strategy("SarCci3", 7, -100, 0.7));
+        strategies.add(new StochSar2Strategy("StochSar4",14, 30, 70, 0.7));
+        strategies.add(new SarCciFisherStrategy("SarCciFisher",7, -100, 0.7));
+        strategies.add(new SarCciDStrategy("SarCciD", 7, -100, 0.7));
+        strategies.add(new StochSarSimpleStrategy("StochSarSimple",14, 30));
+        strategies.add(new EngulfingStrategy("Engulfing"));
+        strategies.add(new EngulfingEmaStrategy("EngulfingEma"));
+        strategies.add(new EngulfingEmaFisherStrategy("EngulfingEmaFisher", 200));
+        strategies.add(new EngulfingEmaFisherStrategy("EngulfingEmaFisher50", 50));
+        strategies.add(new EngulfingCciStrategy("EngulfingCci", 20));
 
 
     }

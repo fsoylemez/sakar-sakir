@@ -187,4 +187,29 @@ public class CouchDbService {
         Database database = dbClient.database("strategy_performance", true);
         database.bulk(strategyPerformances);
     }
+
+    public List<StrategyPerformance> getPerformanceStatistics(String startDate, String endDate) {
+        Database database = dbClient.database("strategy_performance", true);
+        List<StrategyPerformance> data = new ArrayList<>();
+        createAscIndex(database, "closeTime");
+
+
+        Selector start = eq("startDate", startDate);
+        Selector end = eq("endDate", endDate);
+        Operation operation = Operation.and(start, end);
+
+        String bookmark = null;
+        QueryBuilder builder = new QueryBuilder(operation);
+        QueryResult<StrategyPerformance> queryResult;
+        do {
+            if (StringUtils.isNotEmpty(bookmark)) {
+                builder = builder.bookmark(bookmark);
+            }
+            queryResult = database.query(builder.build(), StrategyPerformance.class);
+            data.addAll(queryResult.getDocs());
+            bookmark = queryResult.getBookmark();
+        } while (!queryResult.getDocs().isEmpty() && StringUtils.isNotEmpty(bookmark));
+
+        return data;
+    }
 }

@@ -9,7 +9,9 @@ import com.fms.sakir.backtest.util.DateUtils;
 import com.fms.sakir.backtest.util.StringUtils;
 import com.fms.sakir.strategy.base.SimpleStrategy;
 import com.fms.sakir.strategy.factory.StrategyFactory;
+import com.fms.sakir.strategy.model.PositionSummary;
 import com.fms.sakir.strategy.model.StrategyExecutionResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBarSeries;
@@ -20,6 +22,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+@Slf4j
 @ApplicationScoped
 public class StrategyExecutorService {
 
@@ -45,12 +48,12 @@ public class StrategyExecutorService {
             strategies = strategies.stream().filter(a -> strategy.equals(a.getStrategyName())).collect(Collectors.toList());
         }
 
-        strategies.forEach(ss -> response.add(ss.runStrategy(series, true)));
+        strategies.forEach(ss -> response.add(ss.runStrategy(series)));
 
         return response;
     }
 
-    public List<StrategyExecutionResponse> executeDb(String strategy, CandlestickInterval interval, String ticker, String startDate, String endDate) {
+    public List<StrategyExecutionResponse> executeDb(String strategy, CandlestickInterval interval, String ticker, String startDate, String endDate, Boolean hidePositions) {
         BarSeries series = new BaseBarSeries(ticker + "_series");
         List<Candlestick> candlesticks = dbService.read(ticker, interval, DateUtils.dateToMilli(startDate), DateUtils.dateToMilli(endDate));
         candlesticks.forEach(c-> series.addBar(mapper.toBar(c, interval)));
@@ -65,14 +68,14 @@ public class StrategyExecutorService {
         strategies.forEach(ss -> {
             StrategyExecutionResponse strategyExecutionResponse;
             StrategyPerformance performance = dbService.getPerformance(ss.getStrategyName(), ticker, interval, startDate, endDate);
-            if (performance != null) {
+            if (performance != null && Boolean.TRUE.equals(hidePositions)) {
                 strategyExecutionResponse = StrategyExecutionResponse.builder()
                         .strategyName(performance.getStrategyName())
                         .positionCount(performance.getPositionCount())
                         .grossReturn(performance.getTotalReturn())
                         .build();
             } else {
-                strategyExecutionResponse = ss.runStrategy(series, true);
+                strategyExecutionResponse = ss.runStrategy(series);
             }
             response.add(strategyExecutionResponse);
         });
@@ -98,7 +101,7 @@ public class StrategyExecutorService {
 
             List<StrategyExecutionResponse> strategyResponses = new ArrayList<>(strategies.size());
 
-            strategies.forEach(ss -> strategyResponses.add(ss.runStrategy(series, showPositions)));
+            strategies.forEach(ss -> strategyResponses.add(ss.runStrategy(series)));
 
             executionResponse.setStrategyExecutionResponses(strategyResponses);
             String winnerStrategy = strategyResponses.stream().max(Comparator.comparing(StrategyExecutionResponse::getGrossReturn)).map(StrategyExecutionResponse::getStrategyName).orElse("NaN");
@@ -153,7 +156,7 @@ public class StrategyExecutorService {
                         candlesticks.set(dbService.read(ticker, interval, DateUtils.dateToMilli(request.getStartDate()), DateUtils.dateToMilli(request.getEndDate())));
                         candlesticks.get().forEach(c-> series.addBar(mapper.toBar(c, interval)));
                     }
-                    strategyExecutionResponse = ss.runStrategy(series, showPositions);
+                    strategyExecutionResponse = ss.runStrategy(series);
                 }
                 strategyResponses.add(strategyExecutionResponse);
             });
@@ -179,6 +182,8 @@ public class StrategyExecutorService {
 
         result.setStrategyPerformances(performances.stream().sorted(Comparator.comparingDouble(StrategyPerformanceSummary::getTotalReturn).reversed()).collect(Collectors.toList()));
 
+        log.info("Execution DONE!");
+
         return result;
     }
 
@@ -195,6 +200,11 @@ public class StrategyExecutorService {
             perf.setInterval(interval.getIntervalId());
             perf.setStartDate(startDate);
             perf.setEndDate(endDate);
+
+            if (ser.getPositionCount() > 0 && ser.getPositions() != null) {
+                long winningCount = ser.getPositions().stream().filter(PositionSummary::getWinning).count();
+                perf.setWinningRate((double) winningCount / ser.getPositionCount());
+            }
 
             return perf;
         }).collect(Collectors.toList());

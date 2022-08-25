@@ -20,4 +20,6 @@ public class StrategyPerformance {
     private double totalReturn;
 
     private int positionCount;
+
+    private double winningRate;
 }
