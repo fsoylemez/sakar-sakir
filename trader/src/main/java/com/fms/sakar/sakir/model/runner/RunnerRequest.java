@@ -17,6 +17,6 @@ public class RunnerRequest implements Serializable {
     @NotNull private CandlestickInterval interval;
 
     @NotNull private String strategyName;
-
-    private Trade.TradeType tradeType;
+    
+    private Boolean onlyFinalCandles;
 }

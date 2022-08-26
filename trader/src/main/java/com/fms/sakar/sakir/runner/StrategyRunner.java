@@ -88,6 +88,7 @@ public class StrategyRunner implements Runnable {
         executionParams.put(STRATEGY_NAME, runnerRequest.getStrategyName());
         executionParams.put(BAR_SERIES, barSeries);
         executionParams.put(LAST_OPEN_TIME, lastOpenTime);
+        executionParams.put(ONLY_FINAL_CANDLES, runnerRequest.getOnlyFinalCandles());
 
         return executionParams;
     }

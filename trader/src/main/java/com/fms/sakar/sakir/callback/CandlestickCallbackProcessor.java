@@ -42,6 +42,8 @@ public class CandlestickCallbackProcessor implements BinanceApiWebSocketCallback
 
     private final String strategyName;
 
+    private final Boolean onlyFinalCandles;
+
     public CandlestickCallbackProcessor(UUID taskId, RunnerService runnerService, PositionService positionService, Map<String, Object> executionParams) {
         this.taskId = taskId;
         this.runnerService = runnerService;
@@ -52,6 +54,7 @@ public class CandlestickCallbackProcessor implements BinanceApiWebSocketCallback
         this.strategyName = (String) executionParams.get(STRATEGY_NAME);
         this.barSeries = (BarSeries) executionParams.get(BAR_SERIES);
         this.lastOpenTime = (Long) executionParams.get(LAST_OPEN_TIME);
+        this.onlyFinalCandles = (Boolean) executionParams.get(ONLY_FINAL_CANDLES);
 
         running.set(true);
     }
@@ -68,6 +71,9 @@ public class CandlestickCallbackProcessor implements BinanceApiWebSocketCallback
                     response.getClose(), response.getVolume());
 
             if (Objects.equals(lastOpenTime, response.getOpenTime())) {
+                if (Boolean.TRUE.equals(onlyFinalCandles)) {
+                    return;
+                }
                 barSeries.addBar(newBar, true);
             } else {
                 barSeries.addBar(newBar);

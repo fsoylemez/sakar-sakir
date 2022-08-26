@@ -14,4 +14,6 @@ public class ExecutionConstants {
 
     public static final String LAST_OPEN_TIME = "lastOpenTime";
 
+    public static final String ONLY_FINAL_CANDLES = "onlyFinalCandles";
+
 }
