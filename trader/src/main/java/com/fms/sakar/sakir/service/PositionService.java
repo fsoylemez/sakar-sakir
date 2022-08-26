@@ -41,7 +41,7 @@ public class PositionService {
         if (tradingRecords.get(symbol) == null) {
             TradingRecord tradingRecord = new BaseTradingRecord(simpleStrategy.getTradeType());
             Trade lastTrade = accountService.getLastTrade(symbol);
-            if (lastTrade.isBuyer()) {
+            if (lastTrade.isBuyer() && accountService.getFreeBalance(symbol) != null) {
                 tradingRecord.enter(0, DecimalNum.valueOf(lastTrade.getPrice()), DecimalNum.valueOf(lastTrade.getQty()));
             }
 
