@@ -10,10 +10,12 @@ import com.cloudant.client.api.views.ViewRequest;
 import com.cloudant.client.api.views.ViewRequestBuilder;
 import com.cloudant.client.api.views.ViewResponse;
 import com.cloudant.client.org.lightcouch.NoDocumentException;
-import com.fms.sakir.backtest.model.PopulateHistory;
-import com.fms.sakir.backtest.model.StrategyPerformance;
+import com.fms.sakir.backtest.model.*;
+import com.fms.sakir.backtest.model.tiingo.OhlcData;
+import com.fms.sakir.backtest.util.BackTestConstants;
 import com.fms.sakir.backtest.util.DateUtils;
 import com.fms.sakir.strategy.exception.SakirException;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -29,6 +31,7 @@ import static com.cloudant.client.api.query.Expression.*;
 import static com.fms.sakir.backtest.util.StringUtils.buildDbName;
 import static com.fms.sakir.backtest.util.StringUtils.buildStrategyPerfId;
 
+@Slf4j
 @ApplicationScoped
 public class CouchDbService {
 
@@ -37,6 +40,11 @@ public class CouchDbService {
 
 
     public void write(String databaseName, List<Candlestick> priceData) {
+        Database database = dbClient.database(databaseName, true);
+        database.bulk(priceData);
+    }
+
+    public void writeTiingo(String databaseName, List<OhlcData> priceData) {
         Database database = dbClient.database(databaseName, true);
         database.bulk(priceData);
     }
@@ -59,6 +67,32 @@ public class CouchDbService {
                 builder = builder.bookmark(bookmark);
             }
             queryResult = database.query(builder.build(), Candlestick.class);
+            data.addAll(queryResult.getDocs());
+            bookmark = queryResult.getBookmark();
+        } while (!queryResult.getDocs().isEmpty() && StringUtils.isNotEmpty(bookmark));
+
+        return data;
+    }
+
+
+    public List<OhlcData> readOhlc(String symbol, CandlestickInterval interval, long startTime, long endTime) {
+        Database database = dbClient.database(buildDbName(symbol, interval), true);
+        Selector start = gt("date", startTime);
+        Selector end = lt("date", endTime);
+
+        Operation operation = Operation.and(start, end);
+
+        List<OhlcData> data = new ArrayList<>();
+        createAscIndex(database, "date");
+
+        String bookmark = null;
+        QueryBuilder builder = new QueryBuilder(operation).sort(Sort.asc("date"));
+        QueryResult<OhlcData> queryResult;
+        do {
+            if (StringUtils.isNotEmpty(bookmark)) {
+                builder = builder.bookmark(bookmark);
+            }
+            queryResult = database.query(builder.build(), OhlcData.class);
             data.addAll(queryResult.getDocs());
             bookmark = queryResult.getBookmark();
         } while (!queryResult.getDocs().isEmpty() && StringUtils.isNotEmpty(bookmark));
@@ -183,9 +217,14 @@ public class CouchDbService {
         return null;
     }
 
-    public void writePerformance(List<StrategyPerformance> strategyPerformances) {
+    public void writePerformances(List<StrategyPerformance> strategyPerformances) {
         Database database = dbClient.database("strategy_performance", true);
         database.bulk(strategyPerformances);
+    }
+
+    public void updatePerformance(StrategyPerformance performance) {
+        Database database = dbClient.database("strategy_performance", false);
+        database.update(performance);
     }
 
     public List<StrategyPerformance> getPerformanceStatistics(String startDate, String endDate) {
@@ -211,5 +250,209 @@ public class CouchDbService {
         } while (!queryResult.getDocs().isEmpty() && StringUtils.isNotEmpty(bookmark));
 
         return data;
+    }
+
+    public List<StrategyPerformance> getPerformanceByStrategy(String strategyName) {
+        Database database = dbClient.database("strategy_performance", false);
+        List<StrategyPerformance> data = new ArrayList<>();
+
+        Selector strategy = eq("strategyName", strategyName);
+
+        String bookmark = null;
+        QueryBuilder builder = new QueryBuilder(strategy);
+        QueryResult<StrategyPerformance> queryResult;
+        do {
+            if (StringUtils.isNotEmpty(bookmark)) {
+                builder = builder.bookmark(bookmark);
+            }
+            queryResult = database.query(builder.build(), StrategyPerformance.class);
+            data.addAll(queryResult.getDocs());
+            bookmark = queryResult.getBookmark();
+        } while (!queryResult.getDocs().isEmpty() && StringUtils.isNotEmpty(bookmark));
+
+        return data;
+    }
+
+    public void writePerformanceSummaries(List<PerformanceSummary> summaries) {
+        Database database = dbClient.database("aaa_perf_summary", true);
+        database.bulk(summaries);
+    }
+
+    public PerformanceSummary getPerformanceSummary(String strategyName) {
+        Database database = dbClient.database("aaa_perf_summary", true);
+        if(database.contains(strategyName)) {
+            return database.find(PerformanceSummary.class, strategyName);
+        }
+
+        return null;
+    }
+
+    public void updateSummary(PerformanceSummary summary) {
+        Database database = dbClient.database("aaa_perf_summary", false);
+        database.update(summary);
+    }
+
+    public void saveSummary(PerformanceSummary summary) {
+        Database database = dbClient.database("aaa_perf_summary", false);
+        database.save(summary);
+    }
+
+    public void delete(String ticker, CandlestickInterval interval, OhlcData c) {
+        Database database = dbClient.database(buildDbName(ticker, interval), false);
+        database.remove(c);
+    }
+
+    public List<StrategyPerformance> getPerformanceByStrategyFx(String strategyName) {
+        Database database = dbClient.database("aaa_perf_summary_fx", false);
+        List<StrategyPerformance> data = new ArrayList<>();
+
+        Selector strategy = eq("strategyName", strategyName);
+        Selector symbol = in("symbol", BackTestConstants.FX_PAIRS);
+        Operation and = Operation.and(strategy, symbol);
+
+        String bookmark = null;
+        QueryBuilder builder = new QueryBuilder(and);
+        QueryResult<StrategyPerformance> queryResult;
+        do {
+            if (StringUtils.isNotEmpty(bookmark)) {
+                builder = builder.bookmark(bookmark);
+            }
+            queryResult = database.query(builder.build(), StrategyPerformance.class);
+            data.addAll(queryResult.getDocs());
+            bookmark = queryResult.getBookmark();
+        } while (!queryResult.getDocs().isEmpty() && StringUtils.isNotEmpty(bookmark));
+
+        return data;
+    }
+
+    public List<StrategyPerformance> getPerformanceByStrategyAndPair(String databaseName, String strategyName, String symbol) {
+        Database database = dbClient.database(databaseName, false);
+        List<StrategyPerformance> data = new ArrayList<>();
+
+        Selector strategy = eq("strategyName", strategyName);
+        Selector symbolSelector = in("symbol", symbol);
+        Operation and = Operation.and(strategy, symbolSelector);
+
+        String bookmark = null;
+        QueryBuilder builder = new QueryBuilder(and);
+        QueryResult<StrategyPerformance> queryResult;
+        do {
+            if (StringUtils.isNotEmpty(bookmark)) {
+                builder = builder.bookmark(bookmark);
+            }
+            queryResult = database.query(builder.build(), StrategyPerformance.class);
+            data.addAll(queryResult.getDocs());
+            bookmark = queryResult.getBookmark();
+        } while (!queryResult.getDocs().isEmpty() && StringUtils.isNotEmpty(bookmark));
+
+        return data;
+    }
+
+    public PerformanceSummaryFx getPerformanceSummaryFx(String strategyName) {
+        Database database = dbClient.database("aaa_perf_summary_fx", true);
+        if(database.contains(strategyName)) {
+            return database.find(PerformanceSummaryFx.class, strategyName);
+        }
+
+        return null;
+    }
+
+    public void updateSummaryFx(PerformanceSummaryFx summary) {
+        Database database = dbClient.database("aaa_perf_summary_fx", false);
+        database.update(summary);
+    }
+
+    public void saveSummaryFx(PerformanceSummaryFx summary) {
+        Database database = dbClient.database("aaa_perf_summary_fx", false);
+
+        try {
+            database.save(summary);
+        } catch (Exception e) {
+            log.error(summary.toString());
+        }
+    }
+
+    public List<StrategyPerformance> getForDelete(String databaseName, String[] symbols) {
+        Database database = dbClient.database(databaseName, false);
+        List<StrategyPerformance> data = new ArrayList<>();
+
+        Selector symbol = in("symbol", symbols);
+
+        String bookmark = null;
+        QueryBuilder builder = new QueryBuilder(symbol);
+        QueryResult<StrategyPerformance> queryResult;
+        do {
+            if (StringUtils.isNotEmpty(bookmark)) {
+                builder = builder.bookmark(bookmark);
+            }
+            queryResult = database.query(builder.build(), StrategyPerformance.class);
+            data.addAll(queryResult.getDocs());
+            bookmark = queryResult.getBookmark();
+        } while (!queryResult.getDocs().isEmpty() && StringUtils.isNotEmpty(bookmark));
+
+        return data;
+    }
+
+    public void bulk(String databaseName, List<StrategyPerformance> performanceData) {
+        Database database = dbClient.database(databaseName, false);
+        database.bulk(performanceData);
+    }
+
+    public PerformanceSummaryByPairFx getPerformanceSummaryByPairFx(String strategyName, String pair) {
+        Database database = dbClient.database("aaa_perf_summary_by_pair_fx", true);
+        String id = String.join("_", strategyName, pair);
+        if(database.contains(id)) {
+            return database.find(PerformanceSummaryByPairFx.class, id);
+        }
+
+        return null;
+    }
+
+    public void updateSummaryByPairFx(PerformanceSummaryByPairFx summary) {
+        Database database = dbClient.database("aaa_perf_summary_by_pair_fx", false);
+        try {
+            database.update(summary);
+        } catch (Exception e) {
+            log.error(summary.toString());
+        }
+    }
+
+    public void saveSummaryByPairFx(PerformanceSummaryByPairFx summary) {
+        Database database = dbClient.database("aaa_perf_summary_by_pair_fx", false);
+
+        try {
+            database.save(summary);
+        } catch (Exception e) {
+            log.error(summary.toString());
+        }
+    }
+
+    public PerformanceSummaryByPair getPerformanceSummaryByPair(String strategyName, String pair) {
+        Database database = dbClient.database("aaa_perf_summary_by_pair", true);
+        String id = String.join("_", strategyName, pair);
+        if(database.contains(id)) {
+            return database.find(PerformanceSummaryByPair.class, id);
+        }
+
+        return null;
+    }
+
+    public void updateSummaryByPair(PerformanceSummaryByPair summary) {
+        Database database = dbClient.database("aaa_perf_summary_by_pair", false);
+        try {
+            database.update(summary);
+        } catch (Exception e) {
+            log.error(summary.toString());
+        }
+    }
+
+    public void saveSummaryByPair(PerformanceSummaryByPair summary) {
+        Database database = dbClient.database("aaa_perf_summary_by_pair", false);
+
+        try {
+            database.save(summary);
+        } catch (Exception e) {
+            log.error(summary.toString());
+        }
     }
 }

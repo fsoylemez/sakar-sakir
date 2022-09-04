@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
-public class DataFetchService {
+public class BinanceDataFetchService {
 
     @Inject
     BinanceApiRestClient binanceApi;

@@ -28,7 +28,7 @@ public abstract class SimpleStrategy {
         return Trade.TradeType.BUY;
     }
 
-    public StrategyExecutionResponse runStrategy(BarSeries series) {
+    public StrategyExecutionResponse runStrategy(BarSeries series, boolean hidePositions) {
 
         BarSeriesManager seriesManager = new BarSeriesManager(series);
 
@@ -42,7 +42,9 @@ public abstract class SimpleStrategy {
                 .positionCount(tradingRecord.getPositionCount())
                 .build();
 
-        strategyExecutionResponse.setPositions(tradingRecord.getPositions().stream().map(p -> mapPosition(series, p)).collect(Collectors.toList()));
+        if (!hidePositions) {
+            strategyExecutionResponse.setPositions(tradingRecord.getPositions().stream().map(p -> mapPosition(series, p)).collect(Collectors.toList()));
+        }
 
         return strategyExecutionResponse;
     }

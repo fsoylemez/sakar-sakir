@@ -7,6 +7,8 @@ public class StrategyPerformance {
 
     private String _id;
 
+    private String _rev;
+
     private String symbol;
 
     private String interval;
@@ -22,4 +24,10 @@ public class StrategyPerformance {
     private int positionCount;
 
     private double winningRate;
+
+    private String period;
+
+    private String periodValue;
+
+    private boolean _deleted;
 }

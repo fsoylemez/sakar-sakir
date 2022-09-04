@@ -15,10 +15,11 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+import static com.fms.sakir.backtest.util.DateUtils.getDueDate;
 import static com.fms.sakir.backtest.util.StringUtils.buildDbName;
 
 @ApplicationScoped
-public class PopulationService {
+public class CryptoPopulationService {
 
     @Inject
     CouchDbService dbService;
@@ -54,46 +55,6 @@ public class PopulationService {
         }
 
         dbService.writeHistory(new PopulateHistory(pairId, lastExecuted));
-    }
-
-    public long getDueDate(CandlestickInterval candlestickInterval) {
-        ZonedDateTime today = ZonedDateTime.now(DateUtils.getZoneId());
-
-        if (candlestickInterval.equals(CandlestickInterval.FIFTEEN_MINUTES)) {
-            int minute = today.get(ChronoField.MINUTE_OF_HOUR);
-            int diff = minute % 15;
-            return today.minus(diff, ChronoUnit.MINUTES).toInstant().toEpochMilli();
-        }
-        if (candlestickInterval.equals(CandlestickInterval.FIVE_MINUTES)) {
-            int minute = today.get(ChronoField.MINUTE_OF_HOUR);
-            int diff = minute % 5;
-            return today.minus(diff, ChronoUnit.MINUTES).toInstant().toEpochMilli();
-        }
-        if (candlestickInterval.equals(CandlestickInterval.HOURLY)) {
-            int minute = today.get(ChronoField.MINUTE_OF_HOUR);
-            return today.minus(minute, ChronoUnit.MINUTES).toInstant().toEpochMilli();
-        }
-        if (candlestickInterval.equals(CandlestickInterval.FOUR_HOURLY)) {
-            int minute = today.get(ChronoField.MINUTE_OF_HOUR);
-            int hour = today.get(ChronoField.HOUR_OF_DAY);
-            int diff = hour % 4;
-            today = today.minus(diff, ChronoUnit.HOURS);
-            return today.minus(minute, ChronoUnit.MINUTES).toInstant().toEpochMilli();
-        }
-        if (candlestickInterval.equals(CandlestickInterval.HALF_HOURLY)) {
-            int minute = today.get(ChronoField.MINUTE_OF_HOUR);
-            int diff = minute % 30;
-            return today.minus(diff, ChronoUnit.MINUTES).toInstant().toEpochMilli();
-        }
-        if (candlestickInterval.equals(CandlestickInterval.TWO_HOURLY)) {
-            int minute = today.get(ChronoField.MINUTE_OF_HOUR);
-            int hour = today.get(ChronoField.HOUR_OF_DAY);
-            int diff = hour % 2;
-            today = today.minus(diff, ChronoUnit.HOURS);
-            return today.minus(minute, ChronoUnit.MINUTES).toInstant().toEpochMilli();
-        }
-        //TODO implement for different intervals
-        return today.truncatedTo(ChronoUnit.DAYS).toInstant().toEpochMilli();
     }
 
 }
