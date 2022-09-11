@@ -70,10 +70,11 @@ public class CandlestickCallbackProcessor implements BinanceApiWebSocketCallback
                     response.getHigh(), response.getLow(),
                     response.getClose(), response.getVolume());
 
+            if (Boolean.TRUE.equals(onlyFinalCandles) && Boolean.FALSE.equals(response.getBarFinal())) {
+                return;
+            }
+
             if (Objects.equals(lastOpenTime, response.getOpenTime())) {
-                if (Boolean.TRUE.equals(onlyFinalCandles)) {
-                    return;
-                }
                 barSeries.addBar(newBar, true);
             } else {
                 barSeries.addBar(newBar);
