@@ -6,11 +6,13 @@ import com.oanda.v20.account.AccountID;
 import com.oanda.v20.account.AccountSummary;
 import io.quarkus.test.junit.QuarkusTest;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.util.Properties;
 
+@Disabled
 @Slf4j
 @QuarkusTest
 public class AccountTest {
