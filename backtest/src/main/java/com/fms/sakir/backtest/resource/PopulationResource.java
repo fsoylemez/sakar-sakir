@@ -1,7 +1,5 @@
 package com.fms.sakir.backtest.resource;
 
-import com.fms.sakir.backtest.db.couchdb.CouchDbService;
-import com.fms.sakir.backtest.model.StrategyPerformance;
 import com.fms.sakir.backtest.service.CryptoPopulationService;
 import com.fms.sakir.backtest.service.FxStockPopulationService;
 import com.fms.sakir.backtest.util.BackTestConstants;
@@ -17,11 +15,8 @@ import java.io.IOException;
 import java.util.List;
 
 @Slf4j
-@Path("db")
+@Path("/populate")
 public class PopulationResource {
-
-    @Inject
-    CouchDbService dbService;
 
     @Inject
     CryptoPopulationService cryptoPopulationService;
@@ -29,16 +24,9 @@ public class PopulationResource {
     @Inject
     FxStockPopulationService fxStockPopulationService;
 
-    @GET
-    @Path("dropDatabases")
-    public Response dropDbs() {
-        dbService.dropDatabases();
-
-        return Response.ok().build();
-    }
 
     @GET
-    @Path("/populate/{symbol}/{interval}/{year}/{month}/{day}")
+    @Path("/{symbol}/{interval}/{year}/{month}/{day}")
     public Response populateFrom(String symbol, String interval, Integer year, Integer month, Integer day) {
         cryptoPopulationService.populate(symbol, interval, year, month, day);
 
@@ -46,7 +34,7 @@ public class PopulationResource {
     }
 
     @GET
-    @Path("/populate/{symbol}/{interval}")
+    @Path("/{symbol}/{interval}")
     public Response populate(String symbol, String interval) {
         cryptoPopulationService.populate(symbol, interval, null, null, null);
 
@@ -54,7 +42,7 @@ public class PopulationResource {
     }
 
     @POST
-    @Path("/populate/{interval}")
+    @Path("/{interval}")
     public Response populateAll(List<String> symbols, @PathParam("interval") String interval) {
         if(symbols == null || symbols.isEmpty()) {
             return Response.noContent().build();
@@ -67,7 +55,7 @@ public class PopulationResource {
     }
 
     @GET
-    @Path("/fx/populate/{interval}")
+    @Path("/fx/{interval}")
     public Response populateFx(@PathParam("interval") String interval) throws IOException, InterruptedException {
         String[] pairs = BackTestConstants.FX_PAIRS;
 
@@ -81,18 +69,13 @@ public class PopulationResource {
     }
 
     @GET
-    @Path("/cleanup")
-    public Response cleanup() {
-        String[] fxPairs = BackTestConstants.FX_PAIRS;
-        String[] cryptoPairs = BackTestConstants.TICKERS;
+    @Path("/stock/{interval}")
+    public Response populateStock(@PathParam("interval") String interval) throws IOException, InterruptedException {
+        String[] pairs = BackTestConstants.STOCK_SYMBOLS;
 
-        List<StrategyPerformance> fxToDelete = dbService.getForDelete("aaa_strategy_performance_fx", cryptoPairs);
-        fxToDelete.forEach(s->s.set_deleted(true));
-        dbService.bulk("aaa_strategy_performance_fx", fxToDelete);
-
-        List<StrategyPerformance> crToDelete = dbService.getForDelete("strategy_performance", fxPairs);
-        crToDelete.forEach(s->s.set_deleted(true));
-        dbService.bulk("strategy_performance", crToDelete);
+        for (String pair : pairs) {
+            fxStockPopulationService.populate(pair, interval, null, "STOCK");
+        }
 
         log.info("COMPLETED");
 

@@ -49,24 +49,24 @@ public class CouchDbService {
         database.bulk(priceData);
     }
 
-    public List<Candlestick> read(String symbol, CandlestickInterval interval, long startTime, long endTime) {
+    public List<Candle> read(String symbol, CandlestickInterval interval, long startTime, long endTime) {
         Database database = dbClient.database(buildDbName(symbol, interval), true);
         Selector start = gt("closeTime", startTime);
         Selector end = lt("closeTime", endTime);
 
         Operation operation = Operation.and(start, end);
 
-        List<Candlestick> data = new ArrayList<>();
+        List<Candle> data = new ArrayList<>();
         createAscIndex(database, "closeTime");
 
         String bookmark = null;
         QueryBuilder builder = new QueryBuilder(operation).sort(Sort.asc("closeTime"));
-        QueryResult<Candlestick> queryResult;
+        QueryResult<Candle> queryResult;
         do {
             if (StringUtils.isNotEmpty(bookmark)) {
                 builder = builder.bookmark(bookmark);
             }
-            queryResult = database.query(builder.build(), Candlestick.class);
+            queryResult = database.query(builder.build(), Candle.class);
             data.addAll(queryResult.getDocs());
             bookmark = queryResult.getBookmark();
         } while (!queryResult.getDocs().isEmpty() && StringUtils.isNotEmpty(bookmark));
@@ -104,9 +104,9 @@ public class CouchDbService {
         Database database = dbClient.database(databaseName, true);
         Selector selector = empty();
         createDescIndex(database, "date");
-        QueryResult<Candlestick> result = database.query(new QueryBuilder(selector).sort(Sort.desc("date")).limit(1).build(), Candlestick.class);
+        QueryResult<Candle> result = database.query(new QueryBuilder(selector).sort(Sort.desc("date")).limit(1).build(), Candle.class);
 
-        Optional<Candlestick> dataWithMaxDate = result.getDocs().stream().findFirst();
+        Optional<Candle> dataWithMaxDate = result.getDocs().stream().findFirst();
 
         return dataWithMaxDate.map(o -> Instant.ofEpochMilli(o.getCloseTime()).atZone(DateUtils.getZoneId()).toLocalDateTime()).orElse(null);
     }
@@ -148,7 +148,7 @@ public class CouchDbService {
         database.save(view_ddoc);
     }
 
-    public List<Candlestick> useView(Database database, String designDocName, String viewName, Long startKey) throws IOException {
+    public List<Candle> useView(Database database, String designDocName, String viewName, Long startKey) throws IOException {
         try {
             database.getDesignDocumentManager().get(designDocName);
         } catch (NoDocumentException e) {
@@ -159,18 +159,18 @@ public class CouchDbService {
         ViewRequestBuilder viewBuilder = database.getViewRequestBuilder(designDocName, viewName);
 
         //build a new request and specify any parameters required
-        ViewRequest<Number, Candlestick> request = viewBuilder.newRequest(Key.Type.NUMBER, Candlestick.class)
+        ViewRequest<Number, Candle> request = viewBuilder.newRequest(Key.Type.NUMBER, Candle.class)
                 .startKey(startKey)
                // .includeDocs(true)
                 .build();
 
         //perform the request and get the response
-        ViewResponse<Number, Candlestick> response = request.getResponse();
+        ViewResponse<Number, Candle> response = request.getResponse();
 
         return response.getRows().stream().map(ViewResponse.Row::getValue).collect(Collectors.toList());
     }
 
-    public List<Candlestick> readViaView(String databaseName, Long key) throws SakirException {
+    public List<Candle> readViaView(String databaseName, Long key) throws SakirException {
         try {
             Database database = dbClient.database(databaseName, true);
 
@@ -298,6 +298,11 @@ public class CouchDbService {
     }
 
     public void delete(String ticker, CandlestickInterval interval, OhlcData c) {
+        Database database = dbClient.database(buildDbName(ticker, interval), false);
+        database.remove(c);
+    }
+
+    public void delete(String ticker, CandlestickInterval interval, Candle c) {
         Database database = dbClient.database(buildDbName(ticker, interval), false);
         database.remove(c);
     }
@@ -448,6 +453,35 @@ public class CouchDbService {
 
     public void saveSummaryByPair(PerformanceSummaryByPair summary) {
         Database database = dbClient.database("aaa_perf_summary_by_pair", false);
+
+        try {
+            database.save(summary);
+        } catch (Exception e) {
+            log.error(summary.toString());
+        }
+    }
+
+    public PerformanceSummaryByPairFx getPerformanceSummaryByPairStock(String strategyName, String pair) {
+        Database database = dbClient.database("aaa_perf_summary_by_pair_stock", true);
+        String id = String.join("_", strategyName, pair);
+        if(database.contains(id)) {
+            return database.find(PerformanceSummaryByPairFx.class, id);
+        }
+
+        return null;
+    }
+
+    public void updateSummaryByPairStock(PerformanceSummaryByPairFx summary) {
+        Database database = dbClient.database("aaa_perf_summary_by_pair_stock", false);
+        try {
+            database.update(summary);
+        } catch (Exception e) {
+            log.error(summary.toString());
+        }
+    }
+
+    public void saveSummaryByPairStock(PerformanceSummaryByPairFx summary) {
+        Database database = dbClient.database("aaa_perf_summary_by_pair_stock", false);
 
         try {
             database.save(summary);

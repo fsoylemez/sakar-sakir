@@ -3,9 +3,9 @@ package com.fms.sakar.sakir.runner;
 import com.binance.api.client.BinanceApiWebSocketClient;
 import com.binance.api.client.domain.market.Candlestick;
 import com.binance.api.client.domain.market.CandlestickInterval;
-import com.fms.sakar.sakir.callback.CandlestickCallbackProcessor;
+import com.fms.sakar.sakir.callback.binance.CandlestickCallbackProcessor;
 import com.fms.sakar.sakir.model.runner.RunnerRequest;
-import com.fms.sakar.sakir.service.PositionService;
+import com.fms.sakar.sakir.service.binance.BinancePositionService;
 import com.fms.sakar.sakir.service.RunnerService;
 import com.fms.sakar.sakir.service.binance.BinanceMarketService;
 import com.fms.sakar.sakir.util.DateUtils;
@@ -39,14 +39,14 @@ public class StrategyRunner implements Runnable {
     private Closeable candlestickStream;
 
 
-    public StrategyRunner(RunnerRequest runnerRequest, UUID taskId, RunnerService runnerService, BinanceMarketService marketService, PositionService positionService, BinanceApiWebSocketClient webSocketClient) {
+    public StrategyRunner(RunnerRequest runnerRequest, UUID taskId, RunnerService runnerService, BinanceMarketService marketService, BinancePositionService binancePositionService, BinanceApiWebSocketClient webSocketClient) {
         log.info("Initializing strategy runner");
         this.runnerRequest = runnerRequest;
         this.webSocketClient = webSocketClient;
 
         Map<String, Object> executionParams = initExecutionParams(marketService);
 
-        this.callbackProcessor = new CandlestickCallbackProcessor(taskId, runnerService, positionService, executionParams);
+        this.callbackProcessor = new CandlestickCallbackProcessor(taskId, runnerService, binancePositionService, executionParams);
     }
 
     @Override

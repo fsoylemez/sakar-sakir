@@ -1,6 +1,5 @@
 package com.fms.sakir.backtest.service;
 
-import com.binance.api.client.domain.market.Candlestick;
 import com.binance.api.client.domain.market.CandlestickInterval;
 import com.fms.sakir.backtest.db.couchdb.CouchDbService;
 import com.fms.sakir.backtest.enums.TiingoInterval;
@@ -61,8 +60,17 @@ public class StrategyExecutorService {
 
     public List<StrategyExecutionResponse> executeDb(String strategy, CandlestickInterval interval, String ticker, String startDate, String endDate, Boolean hidePositions) {
         BarSeries series = new BaseBarSeries(ticker + "_series");
-        List<Candlestick> candlesticks = dbService.read(ticker, interval, DateUtils.dateToMilli(startDate), DateUtils.dateToMilli(endDate));
-        candlesticks.forEach(c-> series.addBar(mapper.toBar(c, interval)));
+        List<Candle> candlesticks = dbService.read(ticker, interval, DateUtils.dateToMilli(startDate), DateUtils.dateToMilli(endDate));
+
+        candlesticks.forEach(c -> {
+            try {
+                series.addBar(mapper.toBar(c, interval));
+
+            } catch (IllegalArgumentException e) {
+                log.error(e.getMessage());
+                dbService.delete(ticker, interval, c);
+            }
+        });
 
         List<SimpleStrategy> strategies = StrategyFactory.getAllStrategies();
         List<StrategyExecutionResponse> response = new ArrayList<>(strategies.size());
@@ -111,7 +119,7 @@ public class StrategyExecutorService {
         }
 
         strategies.forEach(ss -> {
-            StrategyExecutionResponse strategyExecutionResponse;
+            StrategyExecutionResponse strategyExecutionResponse = null;
             StrategyPerformance performance = dbService.getPerformance(ss.getStrategyName(), ticker, interval, startDate, endDate);
             if (performance != null && Boolean.TRUE.equals(hidePositions)) {
                 strategyExecutionResponse = StrategyExecutionResponse.builder()
@@ -120,9 +128,15 @@ public class StrategyExecutorService {
                         .grossReturn(performance.getTotalReturn())
                         .build();
             } else {
-                strategyExecutionResponse = ss.runStrategy(series, false);
+                try {
+                    strategyExecutionResponse = ss.runStrategy(series, false);
+                } catch (Exception e) {
+                    log.error(e.getMessage());
+                }
             }
-            response.add(strategyExecutionResponse);
+            if (strategyExecutionResponse != null) {
+                response.add(strategyExecutionResponse);
+            }
         });
 
         savePerformances(response, interval, ticker, startDate, endDate);
@@ -183,7 +197,7 @@ public class StrategyExecutorService {
             executionResponse.setTicker(ticker);
 
             BarSeries series = new BaseBarSeries(ticker + "_series");
-            AtomicReference<List<Candlestick>> candlesticks = new AtomicReference<>();
+            AtomicReference<List<Candle>> candlesticks = new AtomicReference<>();
 
             List<StrategyExecutionResponse> strategyResponses = new ArrayList<>(strategies.size());
 

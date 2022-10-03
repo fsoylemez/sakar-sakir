@@ -5,11 +5,12 @@ import com.binance.api.client.domain.market.Candlestick;
 import com.binance.api.client.domain.market.CandlestickInterval;
 import com.fms.sakir.backtest.db.couchdb.CouchDbService;
 import com.fms.sakir.backtest.mapper.CandleStickMapper;
-import java.util.Collections;
+import com.fms.sakir.backtest.model.Candle;
 import org.ta4j.core.Bar;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,7 @@ public class BinanceDataFetchService {
     }
 
     public List<Bar> fetchDbData(String symbol, CandlestickInterval interval, Long startTime, Long endTime) {
-        List<Candlestick> candlesticks = dbService.read(symbol, interval, startTime, endTime);
+        List<Candle> candlesticks = dbService.read(symbol, interval, startTime, endTime);
         if (candlesticks.isEmpty()) {
             return Collections.emptyList();
         }

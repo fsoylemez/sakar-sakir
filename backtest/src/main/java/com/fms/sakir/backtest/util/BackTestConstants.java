@@ -12,4 +12,6 @@ public class BackTestConstants {
     public static final String[] FX_PAIRS = {"usdcad", "eurjpy", "eurusd", "eurchf", "usdchf", "eurgbp", "gbpusd", "audcad", "nzdusd",
             "gbpchf", "audusd", "gbpjpy", "usdjpy", "chfjpy", "eurcad", "audjpy", "euraud", "audnzd", "xauusd"};
 
+    public static final String[] STOCK_SYMBOLS = {"aapl", "spy"};
+
 }

@@ -1,5 +1,6 @@
 package com.fms.sakir.backtest.resource;
 
+import com.fms.sakir.backtest.enums.TiingoMarket;
 import com.fms.sakir.backtest.model.PerformanceStats;
 import com.fms.sakir.backtest.service.StrategyPerformanceService;
 
@@ -26,14 +27,21 @@ public class PerformanceResource {
     @GET
     @Path("/sync")
     public Response sync() {
-        performanceService.sync(true);
+        performanceService.sync(TiingoMarket.CRYPTO);
         return Response.ok().build();
     }
 
     @GET
     @Path("/syncFx")
     public Response syncFx() {
-        performanceService.sync(false);
+        performanceService.sync(TiingoMarket.FX);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("/syncStock")
+    public Response syncStock() {
+        performanceService.sync(TiingoMarket.STOCK);
         return Response.ok().build();
     }
 
@@ -55,6 +63,13 @@ public class PerformanceResource {
     @Path("/summaryFx/byPair")
     public Response summaryFxByPair(@QueryParam("update") boolean update) {
         performanceService.prepareSummaryFxByPair(update);
+        return Response.ok().build();
+    }
+
+    @GET
+    @Path("/summaryStock/byPair")
+    public Response summaryStockByPair(@QueryParam("update") boolean update) {
+        performanceService.prepareSummaryStockByPair(update);
         return Response.ok().build();
     }
 

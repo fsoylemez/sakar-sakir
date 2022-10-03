@@ -1,4 +1,4 @@
-package com.fms.sakar.sakir.service;
+package com.fms.sakar.sakir.service.binance;
 
 import com.binance.api.client.domain.account.Trade;
 import com.binance.api.client.exception.BinanceApiException;
@@ -22,10 +22,12 @@ import static com.fms.sakar.sakir.util.NumberUtils.convertPrecision;
 
 @Slf4j
 @ApplicationScoped
-public class PositionService {
+public class BinancePositionService {
 
     private static final String BASE_SYMBOL = "USDT";
+
     private final Map<String, TradingRecord> tradingRecords = new HashMap<>();
+
     @Inject
     BinanceAccountService accountService;
     @Inject

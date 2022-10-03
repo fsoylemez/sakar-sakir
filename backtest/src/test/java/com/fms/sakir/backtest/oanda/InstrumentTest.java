@@ -1,13 +1,19 @@
 package com.fms.sakir.backtest.oanda;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.oanda.v20.Context;
 import com.oanda.v20.ContextBuilder;
+import com.oanda.v20.ExecuteException;
+import com.oanda.v20.RequestException;
+import com.oanda.v20.instrument.CandlestickGranularity;
 import com.oanda.v20.instrument.InstrumentCandlesRequest;
 import com.oanda.v20.instrument.InstrumentCandlesResponse;
 import com.oanda.v20.instrument.InstrumentPriceResponse;
 import com.oanda.v20.primitives.InstrumentName;
 import io.quarkus.test.junit.QuarkusTest;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -22,16 +28,26 @@ public class InstrumentTest {
     @Inject
     Properties properties;
 
+    private Context ctx;
+
+    @Inject
+    ObjectMapper objectMapper;
+
+    @BeforeEach
+    void initContext() {
+        ctx = new ContextBuilder(properties.getProperty("oanda.url"))
+                .setToken(properties.getProperty("oanda.token"))
+                .setApplication("sakir")
+                .build();
+    }
+
     @Test
     void candlesTest() {
-        Context ctx = new ContextBuilder("https://api-fxpractice.oanda.com")
-                .setToken(properties.getProperty("oanda.token"))
-                .build();
 
         try {
-            InstrumentCandlesResponse response = ctx.instrument.candles(new InstrumentCandlesRequest(new InstrumentName("usdjpy")));
+            InstrumentCandlesResponse response = ctx.instrument.candles(new InstrumentCandlesRequest(new InstrumentName("USD_JPY")).setGranularity(CandlestickGranularity.M5));
 
-            log.info(response.toString());
+            log.info(objectMapper.writeValueAsString(response));
         } catch (Exception e) {
            log.error(e.getMessage());
         }
@@ -39,15 +55,14 @@ public class InstrumentTest {
 
     @Test
     void priceTest() {
-        Context ctx = new ContextBuilder("https://api-fxpractice.oanda.com")
-                .setToken(properties.getProperty("oanda.token"))
-                .build();
 
         try {
-            InstrumentPriceResponse response = ctx.instrument.price(new InstrumentName("usdjpy"));
+            InstrumentPriceResponse response = ctx.instrument.price(new InstrumentName("USD_JPY"));
 
-            log.info(response.toString());
-        } catch (Exception e) {
+            log.info(objectMapper.writeValueAsString(response));
+        } catch (RequestException e) {
+            log.error(e.getErrorMessage());
+        } catch (ExecuteException | JsonProcessingException e) {
             log.error(e.getMessage());
         }
     }

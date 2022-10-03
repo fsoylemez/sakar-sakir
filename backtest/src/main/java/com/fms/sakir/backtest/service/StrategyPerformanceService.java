@@ -2,6 +2,7 @@ package com.fms.sakir.backtest.service;
 
 import com.binance.api.client.domain.market.CandlestickInterval;
 import com.fms.sakir.backtest.db.couchdb.CouchDbService;
+import com.fms.sakir.backtest.enums.TiingoMarket;
 import com.fms.sakir.backtest.model.*;
 import com.fms.sakir.backtest.util.BackTestConstants;
 import com.fms.sakir.strategy.base.SimpleStrategy;
@@ -14,7 +15,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAdjusters;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -49,7 +53,7 @@ public class StrategyPerformanceService {
 
         //best 5 winning ratios (divide winning rate by position count)
         Comparator<StrategyPerformance> byWinningPerPosition =
-                (p1, p2) -> Double.compare(p1.getTotalReturn()/p1.getPositionCount(), p2.getTotalReturn()/p2.getPositionCount());
+                Comparator.comparingDouble(p -> p.getTotalReturn() / p.getPositionCount());
 
         List<StrategyPerformance> bestWinningPerPosition = performances.stream()
                 .filter(p-> p.getPositionCount() > 0 && p.getTotalReturn() > 1)
@@ -78,7 +82,7 @@ public class StrategyPerformanceService {
         return stats;
     }
 
-    public void sync(boolean crypto) {
+    public void sync(TiingoMarket market) {
         LocalDate now = LocalDate.now();
 
         int currentMonth = now.get(ChronoField.MONTH_OF_YEAR);
@@ -91,10 +95,12 @@ public class StrategyPerformanceService {
             String startDate = monthStart.format(DateTimeFormatter.ISO_LOCAL_DATE);
             String endDate = monthEnd.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
-            if (crypto) {
-                syncForDate(startDate, endDate, "MONTHLY", monthStart.getMonth().name());
-            } else {
+            if (TiingoMarket.STOCK.equals(market)) {
+                syncForDateStock(startDate, endDate, "MONTHLY", monthStart.getMonth().name());
+            } else if(TiingoMarket.FX.equals(market)) {
                 syncForDateFx(startDate, endDate, "MONTHLY", monthStart.getMonth().name());
+            } else {
+                syncForDate(startDate, endDate, "MONTHLY", monthStart.getMonth().name());
             }
         }
 
@@ -104,10 +110,12 @@ public class StrategyPerformanceService {
         String startDate = yearStart.format(DateTimeFormatter.ISO_LOCAL_DATE);
         String endDate = yearEnd.format(DateTimeFormatter.ISO_LOCAL_DATE);
 
-        if (crypto) {
-            syncForDate(startDate, endDate, "YEARLY", String.valueOf(yearStart.getYear()));
-        } else {
+        if (TiingoMarket.STOCK.equals(market)) {
+            syncForDateStock(startDate, endDate, "YEARLY", String.valueOf(yearStart.getYear()));
+        } else if(TiingoMarket.FX.equals(market)) {
             syncForDateFx(startDate, endDate, "YEARLY", String.valueOf(yearStart.getYear()));
+        } else {
+            syncForDate(startDate, endDate, "YEARLY", String.valueOf(yearStart.getYear()));
         }
 
         log.info("syncing COMPLETED");
@@ -145,6 +153,34 @@ public class StrategyPerformanceService {
         List<SimpleStrategy> strategies = StrategyFactory.getAllStrategies();
         CandlestickInterval[] intervals = {CandlestickInterval.FIVE_MINUTES};
         String[] tickers = BackTestConstants.FX_PAIRS;
+
+        log.info("Calculating period for {} {}", period, periodValue);
+
+        strategies.forEach(s -> {
+            for (String ticker : tickers) {
+                for (CandlestickInterval interval : intervals) {
+                    StrategyPerformance performance = dbService.getPerformance(s.getStrategyName(), ticker, interval, startDate, endDate);
+
+                    if (performance != null) {
+                        if (performance.getPeriod() == null) {
+                            log.info("Calculating only period for {} {} {}", s.getStrategyName(), ticker, interval);
+                            performance.setPeriod(period);
+                            performance.setPeriodValue(periodValue);
+                            dbService.updatePerformance(performance);
+                        }
+                    } else {
+                        log.info("Calculating outcome for {} {} {}", s.getStrategyName(), ticker, interval);
+                        executorService.executeDbFx(s.getStrategyName(), interval, ticker, startDate, endDate, true);
+                    }
+                }
+            }
+        });
+    }
+
+    public void syncForDateStock(String startDate, String endDate, String period, String periodValue) {
+        List<SimpleStrategy> strategies = StrategyFactory.getAllStrategies();
+        CandlestickInterval[] intervals = {CandlestickInterval.FIVE_MINUTES, CandlestickInterval.FIFTEEN_MINUTES};
+        String[] tickers = BackTestConstants.STOCK_SYMBOLS;
 
         log.info("Calculating period for {} {}", period, periodValue);
 
@@ -819,4 +855,107 @@ public class StrategyPerformanceService {
         }
     }
 
+    public void prepareSummaryStockByPair(boolean update) {
+
+        List<SimpleStrategy> strategies = StrategyFactory.getAllStrategies();
+
+
+        for (SimpleStrategy strategy : strategies) {
+/*            if (List.of("Cmf", "AroonCmf", "AroonComboShort").contains(strategy.getStrategyName())) {
+                continue;
+            }*/
+            for (String symbol : BackTestConstants.STOCK_SYMBOLS) {
+                PerformanceSummaryByPairFx summary = new PerformanceSummaryByPairFx();
+                summary.setStrategyName(strategy.getStrategyName());
+                summary.setSymbol(symbol);
+                summary.set_id(String.join("_", strategy.getStrategyName(), symbol));
+
+                PerformanceSummaryByPairFx existing = dbService.getPerformanceSummaryByPairStock(strategy.getStrategyName(), symbol);
+                if (existing != null) {
+                    if (update) {
+                        summary = existing;
+                    } else {
+                        continue;
+                    }
+                }
+
+                List<StrategyPerformance> performances = dbService.getPerformanceByStrategyAndPair("aaa_strategy_performance_stock", strategy.getStrategyName(), symbol);
+
+                Optional<StrategyPerformance> best = getMaxReturn(performances, null);
+                Optional<StrategyPerformance> worst = getMinReturn(performances, null);
+                double avgReturn = getAverageReturn(performances, null);
+                double avgPositionCount = getAveragePositionCount(performances, null);
+
+                if (best.isPresent()) {
+                    StrategyPerformance bestPerf = best.get();
+                    summary.setBestPeriod(bestPerf.getPeriodValue());
+                    summary.setBestInterval(bestPerf.getInterval());
+                    summary.setBestReturn(bestPerf.getTotalReturn());
+                }
+
+                if (worst.isPresent()) {
+                    StrategyPerformance worstPerf = worst.get();
+                    summary.setWorstPeriod(worstPerf.getPeriodValue());
+                    summary.setWorstInterval(worstPerf.getInterval());
+                    summary.setWorstReturn(worstPerf.getTotalReturn());
+                }
+
+                summary.setAverageReturn(avgReturn);
+                summary.setAveragePositionCount(avgPositionCount);
+
+
+                Optional<StrategyPerformance> best15m = getMaxReturn(performances, CandlestickInterval.FIFTEEN_MINUTES);
+                Optional<StrategyPerformance> worst15m = getMinReturn(performances, CandlestickInterval.FIFTEEN_MINUTES);
+                double avgReturn15m = getAverageReturn(performances, CandlestickInterval.FIFTEEN_MINUTES);
+                double avgPositionCount15m = getAveragePositionCount(performances, CandlestickInterval.FIFTEEN_MINUTES);
+
+                if (best15m.isPresent()) {
+                    StrategyPerformance best15mPerf = best15m.get();
+                    summary.setM15BestPeriod(best15mPerf.getPeriodValue());
+                    summary.setM15BestInterval(best15mPerf.getInterval());
+                    summary.setM15BestReturn(best15mPerf.getTotalReturn());
+                }
+
+                if (worst15m.isPresent()) {
+                    StrategyPerformance worst15mPerf = worst15m.get();
+                    summary.setM15WorstPeriod(worst15mPerf.getPeriodValue());
+                    summary.setM15WorstInterval(worst15mPerf.getInterval());
+                    summary.setM15WorstReturn(worst15mPerf.getTotalReturn());
+                }
+
+                summary.setM15AverageReturn(avgReturn15m);
+                summary.setM15AveragePositionCount(avgPositionCount15m);
+
+
+                Optional<StrategyPerformance> best5m = getMaxReturn(performances, CandlestickInterval.FIVE_MINUTES);
+                Optional<StrategyPerformance> worst5m = getMinReturn(performances, CandlestickInterval.FIVE_MINUTES);
+                double avgReturn5m = getAverageReturn(performances, CandlestickInterval.FIVE_MINUTES);
+                double avgPositionCount5m = getAveragePositionCount(performances, CandlestickInterval.FIVE_MINUTES);
+
+                if (best5m.isPresent()) {
+                    StrategyPerformance best5mPerf = best5m.get();
+                    summary.setM5BestPeriod(best5mPerf.getPeriodValue());
+                    summary.setM5BestInterval(best5mPerf.getInterval());
+                    summary.setM5BestReturn(best5mPerf.getTotalReturn());
+                }
+
+                if (worst5m.isPresent()) {
+                    StrategyPerformance worst5mPerf = worst5m.get();
+                    summary.setM5WorstPeriod(worst5mPerf.getPeriodValue());
+                    summary.setM5WorstInterval(worst5mPerf.getInterval());
+                    summary.setM5WorstReturn(worst5mPerf.getTotalReturn());
+                }
+
+                summary.setM5AverageReturn(avgReturn5m);
+                summary.setM5AveragePositionCount(avgPositionCount5m);
+
+
+                if (summary.get_rev() != null) {
+                    dbService.updateSummaryByPairStock(summary);
+                } else {
+                    dbService.saveSummaryByPairStock(summary);
+                }
+            }
+        }
+    }
 }

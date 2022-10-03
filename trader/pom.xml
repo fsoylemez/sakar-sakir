@@ -79,6 +79,11 @@
       <artifactId>strategy</artifactId>
       <version>0.0.1</version>
     </dependency>
+    <dependency>
+      <groupId>com.oanda.v20</groupId>
+      <artifactId>v20</artifactId>
+      <version>3.0.25</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

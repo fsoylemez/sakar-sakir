@@ -1,11 +1,11 @@
-package com.fms.sakar.sakir.callback;
+package com.fms.sakar.sakir.callback.binance;
 
 import com.binance.api.client.BinanceApiWebSocketCallback;
 import com.binance.api.client.domain.event.CandlestickEvent;
-import com.fms.sakar.sakir.service.PositionService;
 import com.fms.sakar.sakir.service.RunnerService;
+import com.fms.sakar.sakir.service.binance.BinancePositionService;
 import com.fms.sakar.sakir.util.DateUtils;
-import lombok.SneakyThrows;
+import com.fms.sakir.strategy.exception.SakirException;
 import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.Bar;
 import org.ta4j.core.BarSeries;
@@ -24,7 +24,7 @@ import static com.fms.sakar.sakir.execution.ExecutionConstants.*;
 @Slf4j
 public class CandlestickCallbackProcessor implements BinanceApiWebSocketCallback<CandlestickEvent> {
 
-    private final PositionService positionService;
+    private final BinancePositionService binancePositionService;
 
     private final RunnerService runnerService;
 
@@ -44,10 +44,10 @@ public class CandlestickCallbackProcessor implements BinanceApiWebSocketCallback
 
     private final Boolean onlyFinalCandles;
 
-    public CandlestickCallbackProcessor(UUID taskId, RunnerService runnerService, PositionService positionService, Map<String, Object> executionParams) {
+    public CandlestickCallbackProcessor(UUID taskId, RunnerService runnerService, BinancePositionService binancePositionService, Map<String, Object> executionParams) {
         this.taskId = taskId;
         this.runnerService = runnerService;
-        this.positionService = positionService;
+        this.binancePositionService = binancePositionService;
 
         this.symbol = (String) executionParams.get(SYMBOL);
         this.duration = (Duration) executionParams.get(DURATION);
@@ -59,7 +59,6 @@ public class CandlestickCallbackProcessor implements BinanceApiWebSocketCallback
         running.set(true);
     }
 
-    @SneakyThrows
     @Override
     public void onResponse(CandlestickEvent response) {
 
@@ -82,7 +81,11 @@ public class CandlestickCallbackProcessor implements BinanceApiWebSocketCallback
                 //log.info("Added new bar, open time: {}", Instant.ofEpochMilli(lastOpenTime).atZone(DateUtils.getZoneId()));
             }
 
-            positionService.evaluateEntryOrExit(barSeries, symbol, strategyName);
+            try {
+                binancePositionService.evaluateEntryOrExit(barSeries, symbol, strategyName);
+            } catch (SakirException e) {
+                log.error("Evaluate exception:", e);
+            }
         }
     }
 

@@ -5,6 +5,7 @@ import com.fms.sakar.sakir.model.runner.RunnerRequest;
 import com.fms.sakar.sakir.model.runner.RunnerResponse;
 import com.fms.sakar.sakir.runner.StrategyRunner;
 import com.fms.sakar.sakir.service.binance.BinanceMarketService;
+import com.fms.sakar.sakir.service.binance.BinancePositionService;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.context.ManagedExecutor;
 
@@ -30,7 +31,7 @@ public class RunnerService {
     BinanceMarketService marketService;
 
     @Inject
-    PositionService positionService;
+    BinancePositionService binancePositionService;
 
     @Inject
     BinanceApiWebSocketClient webSocketClient;
@@ -40,7 +41,7 @@ public class RunnerService {
 
         UUID taskId = UUID.randomUUID();
 
-        StrategyRunner strategyRunner = new StrategyRunner(runnerRequest,taskId, this, marketService, positionService, webSocketClient);
+        StrategyRunner strategyRunner = new StrategyRunner(runnerRequest,taskId, this, marketService, binancePositionService, webSocketClient);
         executor.runAsync(strategyRunner);
 
         runningTasks.put(taskId, strategyRunner);
