@@ -5,7 +5,7 @@ import com.fms.sakar.sakir.model.runner.RunnerRequest;
 import com.fms.sakar.sakir.model.runner.RunnerResponse;
 import com.fms.sakar.sakir.runner.StrategyRunner;
 import com.fms.sakar.sakir.service.binance.BinanceMarketService;
-import com.fms.sakar.sakir.service.binance.BinancePositionService;
+import com.fms.sakar.sakir.service.binance.v2.BinancePositionServiceV2;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.context.ManagedExecutor;
 
@@ -31,7 +31,7 @@ public class RunnerService {
     BinanceMarketService marketService;
 
     @Inject
-    BinancePositionService binancePositionService;
+    BinancePositionServiceV2 binancePositionService;
 
     @Inject
     BinanceApiWebSocketClient webSocketClient;

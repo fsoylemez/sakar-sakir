@@ -8,7 +8,6 @@
     <version>0.0.1</version>
   </parent>
 
-  <groupId>com.fms</groupId>
   <artifactId>trader</artifactId>
   <version>0.0.1</version>
 
@@ -47,7 +46,7 @@
     <dependency>
       <groupId>org.ta4j</groupId>
       <artifactId>ta4j-core</artifactId>
-      <version>0.14</version>
+      <version>${ta4j.version}</version>
     </dependency>
     <dependency>
       <groupId>com.opencsv</groupId>

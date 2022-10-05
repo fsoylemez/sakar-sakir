@@ -2,10 +2,10 @@ package com.fms.sakir.strategy.strategies.v2;
 
 import com.fms.sakir.strategy.base.SimpleStrategy;
 import org.ta4j.core.*;
-import org.ta4j.core.indicators.AroonOscillatorIndicator;
 import org.ta4j.core.indicators.FisherIndicator;
 import org.ta4j.core.indicators.StochasticOscillatorDIndicator;
 import org.ta4j.core.indicators.StochasticOscillatorKIndicator;
+import org.ta4j.core.indicators.aroon.AroonOscillatorIndicator;
 import org.ta4j.core.rules.*;
 
 

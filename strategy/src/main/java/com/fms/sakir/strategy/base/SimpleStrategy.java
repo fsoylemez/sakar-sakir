@@ -5,7 +5,7 @@ import com.fms.sakir.strategy.model.StrategyExecutionResponse;
 import lombok.Getter;
 import org.jboss.logging.Logger;
 import org.ta4j.core.*;
-import org.ta4j.core.analysis.criteria.pnl.GrossReturnCriterion;
+import org.ta4j.core.criteria.pnl.GrossReturnCriterion;
 import org.ta4j.core.num.Num;
 
 import java.time.format.DateTimeFormatter;

@@ -2,12 +2,11 @@ package com.fms.sakir.strategy.strategies.v2;
 
 import com.fms.sakir.strategy.base.SimpleStrategy;
 import org.ta4j.core.*;
-import org.ta4j.core.indicators.AroonOscillatorIndicator;
 import org.ta4j.core.indicators.ParabolicSarIndicator;
+import org.ta4j.core.indicators.aroon.AroonOscillatorIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.rules.CrossedDownIndicatorRule;
 import org.ta4j.core.rules.CrossedUpIndicatorRule;
-import org.ta4j.core.rules.OverIndicatorRule;
 import org.ta4j.core.rules.UnderIndicatorRule;
 
 

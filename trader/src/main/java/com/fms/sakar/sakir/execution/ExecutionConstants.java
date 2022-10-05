@@ -16,4 +16,6 @@ public class ExecutionConstants {
 
     public static final String ONLY_FINAL_CANDLES = "onlyFinalCandles";
 
+    public static final String BAR_QUEUE = "bars";
+
 }
