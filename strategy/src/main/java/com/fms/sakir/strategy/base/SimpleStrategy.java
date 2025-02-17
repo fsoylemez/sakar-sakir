@@ -5,7 +5,8 @@ import com.fms.sakir.strategy.model.StrategyExecutionResponse;
 import lombok.Getter;
 import org.jboss.logging.Logger;
 import org.ta4j.core.*;
-import org.ta4j.core.criteria.pnl.GrossReturnCriterion;
+import org.ta4j.core.backtest.BarSeriesManager;
+import org.ta4j.core.criteria.pnl.ReturnCriterion;
 import org.ta4j.core.num.Num;
 
 import java.time.format.DateTimeFormatter;
@@ -33,7 +34,7 @@ public abstract class SimpleStrategy {
         BarSeriesManager seriesManager = new BarSeriesManager(series);
 
         TradingRecord tradingRecord = seriesManager.run(buildStrategy(series), getTradeType());
-        Num returnRatio = new GrossReturnCriterion().calculate(series, tradingRecord);
+        Num returnRatio = new ReturnCriterion().calculate(series, tradingRecord);
 
         log.info(strategyName + " , " + tradingRecord.getPositionCount() + " positions " + returnRatio + " return");
 
