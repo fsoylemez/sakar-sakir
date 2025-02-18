@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>sakar-sakir</artifactId>
-    <groupId>com.fms</groupId>
+    <groupId>com.fsoylemez</groupId>
     <version>0.0.1</version>
   </parent>
 
@@ -69,12 +69,12 @@
       <version>1.18.0</version>
     </dependency>
     <dependency>
-      <groupId>com.fms</groupId>
+      <groupId>com.fsoylemez</groupId>
       <artifactId>sakir-binance-api-client</artifactId>
       <version>1.0.1</version>
     </dependency>
     <dependency>
-      <groupId>com.fms</groupId>
+      <groupId>com.fsoylemez</groupId>
       <artifactId>strategy</artifactId>
       <version>0.0.1</version>
     </dependency>
